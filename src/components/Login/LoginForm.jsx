@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import "./LoginForm.css"
 import { useSelector, useDispatch } from 'react-redux'
-import { setDoctor } from '../../features/doctorSlice'
+import { setDoctor, setDocAppointments, setPatients } from '../../features/doctorSlice'
 import { setUser, setProvider} from '../../features/userSlice'
 import { useNavigate } from 'react-router-dom'
 
@@ -12,7 +12,8 @@ export default function LoginForm() {
 
   const dispatch = useDispatch()
   const navigate = useNavigate()
- // const rUser = useSelector((state) => state.user.value)
+  const rDoctor = useSelector((state) => state.doctor)
+  console.log(rDoctor)
 
     const onSubmit = async (e) => {
     
@@ -20,7 +21,7 @@ export default function LoginForm() {
     e.preventDefault()
 
     //check username and password 
-    const re =/(patient|admin|doctor)_\d+/
+    const re =/(patient|doctor)_\d+/
     const lower = username.toLowerCase()
     if(!re.test(lower) || password !== "password"){
         setShowError(true)
@@ -59,12 +60,19 @@ export default function LoginForm() {
         return
     }
     if(stateName === "doctor"){
-        let doctor = await fetch("http://localhost:8080/api/employee/"+userNum)
+        await fetch("http://localhost:8080/api/employee/"+userNum)
         .then(function(res){ return res.json()})
+        .then((doctor) => dispatch(setDoctor(doctor)))
         await fetch("http://localhost:8080/api/findDoctorAppointments/"+userNum)
         .then(function(res){ return res.json()})
-        //.then(x => setCurrentUser({...doctor, Appointments:x}))
-        //setCurrentUser({})
+        .then((appointments) => dispatch(setDocAppointments(appointments)))
+        await fetch("http://localhost:8080/api/findPatients/"+userNum)
+        .then(function(res){ return res.json()})
+        .then((patients) => dispatch(setPatients(patients)))
+        console.log(rDoctor.Patients)
+        console.log("navigating")
+        navigate('/doctor')
+        return
     }
   }
   return (

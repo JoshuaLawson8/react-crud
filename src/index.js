@@ -8,7 +8,6 @@ import { Provider } from 'react-redux'
 import LoginPage from './components/Login/LoginPage';
 import UserView from './components/UserView/UserView';
 import DoctorView from './components/DoctorView';
-import AdminView from './components/AdminView'
 
 const router = createBrowserRouter([
   {
@@ -21,11 +20,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/doctor",
-    element: <UserView/>
-  },
-  {
-    path: "/admin",
-    element: <UserView/>
+    element: <DoctorView/>
   }
 ])
 
