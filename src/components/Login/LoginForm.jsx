@@ -1,13 +1,25 @@
 import { useState } from 'react'
 import "./LoginForm.css"
+import { useSelector, useDispatch } from 'react-redux'
+import { setDoctor } from '../../features/doctorSlice'
+import { setUser, setProvider} from '../../features/userSlice'
+import { useNavigate } from 'react-router-dom'
 
-export default function LoginForm({setPageState, currentUser, setCurrentUser, currentDoctor, setCurrentDoctor}) {
+export default function LoginForm() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showError, setShowError] = useState(false)
 
-    const onSubmit = (e) => {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+ // const rUser = useSelector((state) => state.user.value)
+
+    const onSubmit = async (e) => {
+    
+    //to not refresh page
     e.preventDefault()
+
+    //check username and password 
     const re =/(patient|admin|doctor)_\d+/
     const lower = username.toLowerCase()
     if(!re.test(lower) || password !== "password"){
@@ -19,25 +31,40 @@ export default function LoginForm({setPageState, currentUser, setCurrentUser, cu
     const stateName = lower.substring(0, lower.indexOf('_'));
     const userNum = lower.substring(lower.indexOf('_')+1,lower.length)
 
-    setPageState(stateName)
     setShowError(false)
+
     if(stateName === "patient"){
-        console.log("setting user")
-        fetch("http://localhost:8080/api/patient/"+userNum)
-        .then(function(res){ return res.json()})
-        .then(x => setCurrentUser(x))
-        //fetch("http://localhost:8080/api/findPatientAppointments/"+userNum)
-        //.then(function(res){ return res.json()})
-        //.then(x => setCurrentUser({...currentUser, x}))
-        //console.log(currentUser)
-        //setCurrentDoctor({})
+        let errored = false
+        let user = await fetch("http://localhost:8080/api/patient/"+userNum)
+        .then(function(res){ 
+            if(res.ok){
+                return res.json()
+            }
+            errored = true
+            setShowError(true)
+            throw Error("not found")
+        })
+        .catch(function(error) { console.log(error)})
+        if(errored)
+            return
         
-    }
-    else if(stateName === "doctor"){
-        fetch("http://localhost:8080/api/employee/"+userNum)
+        await fetch("http://localhost:8080/api/findPatientAppointments/"+userNum)
         .then(function(res){ return res.json()})
-        .then(x => setCurrentDoctor(x))
-        setCurrentUser({})
+        .then(x => dispatch(setUser({...user, Appointments:x})))
+
+        await fetch('http://localhost:8080/api/findProvider/'+userNum)
+        .then(function(res){ return res.json()})
+        .then(x => dispatch(setProvider(x)))
+        navigate('/patient')
+        return
+    }
+    if(stateName === "doctor"){
+        let doctor = await fetch("http://localhost:8080/api/employee/"+userNum)
+        .then(function(res){ return res.json()})
+        await fetch("http://localhost:8080/api/findDoctorAppointments/"+userNum)
+        .then(function(res){ return res.json()})
+        //.then(x => setCurrentUser({...doctor, Appointments:x}))
+        //setCurrentUser({})
     }
   }
   return (

@@ -1,0 +1,12 @@
+.appointment {
+    margin-top: 10px;
+}
+
+.userInfo {
+    position: fixed;
+    height: 100%;
+    right: 0;
+    width: 25%;
+    background-color:blue;
+    margin: 0;
+}
